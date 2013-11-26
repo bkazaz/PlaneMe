@@ -8,7 +8,7 @@ class GameWindow < Gosu::Window
 
 	def initialize
 		super Conf::XSize, Conf::YSize, false
-		self.caption = "Planarity"
+		self.caption = "PlaneMe"
 
 		@font = Gosu::Font.new(self, Gosu::default_font_name, 20)
 		@node_image = ['node.png', 'node_sel.png'].map { |f| Gosu::Image.new(self, f, false) }

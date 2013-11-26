@@ -15,6 +15,7 @@ Available actions:
 * `q` Quits the game... :-(
 
 In order for nodes to be grouped, the following criteria must hold
+
 1. They should be connected.
 2. Their links should not intersect.
 3. They should be simple nodes (not already grouped ones).

@@ -14,7 +14,7 @@ class PlanarGraph
 		used = []
 
 		# Create a planar graph
-		(1+level).times do
+		level.times do
 			@nodes << node1 = Node.new(imgs,x,y)
 			@nodes << node2 = Node.new(imgs,x,y)
 			used << @links.delete_at( Random.rand(@links.size) )
@@ -24,11 +24,22 @@ class PlanarGraph
 			seeds.each_uniq_pair { |n1, n2| @links << Link.new(n1,n2) }
 			@links.pop.destroy
 
-			nomore = @nodes.reject { |node| node.links.size < 4}	# find nodes with more than 4 links
+			# do not add any more links to nodes that have more than 3 connections
+			nomore = @nodes.reject { |node| node.links.size < 4}
 			nomore.each do |node| 
 				node.links.each { |link| used << @links.delete(link) }
 			end
 			used.delete_if { |link| link==nil }
+
+			2.times do
+				# take a link and break it up: *1--*2 => *1--*3--*2 
+				used << @links.delete_at( Random.rand(@links.size) )
+				@nodes << node3 = Node.new(imgs,x,y)
+				@links << Link.new(node3, used[-1].nodes[0])
+				@links << Link.new(node3, used[-1].nodes[1])
+				used.pop.destroy
+			end
+
 		end
 		@links += used
 

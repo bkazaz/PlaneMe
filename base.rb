@@ -26,8 +26,8 @@ module Conf
 end
 
 $log = Logger.new(STDOUT)
-#$log.level = Logger::FATAL
-$log.level = Logger:: DEBUG
+$log.level = Logger::FATAL
+#$log.level = Logger:: DEBUG
 $log.debug { "Logger started" }
 
 class TimedEvents

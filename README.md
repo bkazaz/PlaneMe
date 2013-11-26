@@ -1,5 +1,5 @@
 PlaneMe
-===========
+=======
 
 PlaneMe is a Planarity clone (see <http://planarity.net>).
 
@@ -15,8 +15,14 @@ Available actions:
 * `q` Quits the game... :-(
 
 In order for nodes to be grouped, the following criteria must hold
-* They should be connected.
-* Their links should not intersect.
-* They should be simple nodes (not already grouped ones).
+1 They should be connected.
+2 Their links should not intersect.
+3 They should be simple nodes (not already grouped ones).
 
 Be careful, grouping nodes reduces your bonus!
+
+Ruby
+----
+
+The game is written in **Ruby** using *Gosu* & *Tween* gems.
+See <https://github.com/jlnr/gosu> and <https://rubygems.org/gems/tween>

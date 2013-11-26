@@ -11,9 +11,9 @@ class GameWindow < Gosu::Window
 
 		@font = Gosu::Font.new(self, Gosu::default_font_name, 20)
 		@events = TimedEvents.new
-		@messages = ["Welcome to planarity!"]
+		@messages = ["Welcome to the game!"]
 
-		@node_image = ['red_circle.png', 'red_circle_sel.png'].map { |f| Gosu::Image.new(self, f, false) }
+		@node_image = ['node.png', 'node_sel.png'].map { |f| Gosu::Image.new(self, f, false) }
 
 		@score = 0
 		start_level(@level = 1)
@@ -25,7 +25,7 @@ class GameWindow < Gosu::Window
 			inter.each { |e| e.select }
 			@events.set(:intersect, 2) { inter.each{|e|e.deselect} }
 		else
-			cur_score = @graph.score(Time.now - @level_started) 
+			cur_score = @graph.nodes.size*10 + @graph.score(Time.now - @level_started) 
 			@score += cur_score
 			@messages.unshift  "Level #{@level} scored #{cur_score} pts"
 			start_level(@level+=1)
@@ -75,7 +75,7 @@ class GameWindow < Gosu::Window
 	def draw
 		dt = Time.now-@level_started
 		@font.draw("Level: #{@level} - Score: #{@score}", 10, 10, ZOrder::UI, 1.2, 1.2, Color::Text)
-		@font.draw("Gain: #{@graph.score(dt)}", 10, 35, ZOrder::UI, 1.0,1.0, Color::Text)
+		@font.draw("Bonus: #{@graph.score(dt)}", 10, 35, ZOrder::UI, 1.0,1.0, Color::Text)
 
 		next_pos = @key_actions.inject(10) { |pos,(key,val)|
 			@font.draw("'#{key}' #{val[1]}", Conf::XSize-180, pos, ZOrder::UI, 1.0, 1.0, Color::Text); pos+20

@@ -6,10 +6,11 @@ class Node
 
 	@@radius = 10
 	class << self
-		def radius;	@@radius;	end
+		def radius;		@@radius;	end
+		def radius=;	@@radius=r;	end
 	end
 
-	def initialize (x=0, y=0, imgs=nil)
+	def initialize (imgs, x=0, y=0)
 		@x, @y = x, y
 		@links = []
 		@select_count = 0
@@ -42,17 +43,9 @@ class Node
 
 	def draw(window)
 		zorder = @select_count>0 ? ZOrder::SelectedNodes : ZOrder::Nodes
-		if @images
-			img = @images[ @select_count>0 ? 1 : 0]
-			x, y = @x-img.width/2, @y-img.height/2
-			img.draw(x, y, zorder)
-		else
-			radius = @select_count>0 ? @@radius+2 : @@radius
-			color = @select_count>0 ? Color::SelectedNode : Color::Node
-			x, y, r, c = @x, @y, radius, color
-			draw_data = [x-r,y-r,c, x-r,y+r,c, x+r,y-r,c,  x+r,y+r,c, zorder, mode=:default]
-			window.draw_quad(*draw_data)
-		end
+		img = @images[ @select_count>0 ? 1 : 0]
+		x, y = @x-img.width/2, @y-img.height/2
+		img.draw(x, y, zorder)
 	end
 	def update;	end
 
@@ -96,11 +89,10 @@ class Node
 end
 
 class NodeGroup < Node
-	@@radius = Node.radius+2
 	attr_reader :n
-	def initialize(x, y, n=2, imgs)
+	def initialize(imgs, x, y, n=2)
 		@n=n
-		super x,y,imgs
+		super imgs, x, y
 	end
 
 	def draw(window)

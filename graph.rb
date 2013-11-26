@@ -5,9 +5,9 @@ require_relative 'node'
 class PlanarGraph
 	attr_reader :nodes, :links
 
-	def initialize(level, imgs=nil)
+	def initialize(level, imgs)
 		x, y = Conf::XSize/2, Conf::YSize/2
-		@nodes = [Node.new(x,y,imgs), Node.new(x,y,imgs)]
+		@nodes = [Node.new(imgs,x,y), Node.new(imgs,x,y)]
 		@links = [ Link.new(@nodes[0], @nodes[1]) ]
 		@level = level
 		@images = imgs
@@ -15,8 +15,8 @@ class PlanarGraph
 
 		# Create a planar graph
 		(1+level).times do
-			@nodes << node1 = Node.new(x,y,imgs)
-			@nodes << node2 = Node.new(x,y,imgs)
+			@nodes << node1 = Node.new(imgs,x,y)
+			@nodes << node2 = Node.new(imgs,x,y)
 			used << @links.delete_at( Random.rand(@links.size) )
 
 			seeds=[node1, node2, used[-1].nodes[0], used[-1].nodes[1]]
@@ -89,7 +89,7 @@ class PlanarGraph
 		px = node_list.inject(0) { |sum, n| sum+=n.x } / node_list.size
 		py = node_list.inject(0) { |sum, n| sum+=n.y } / node_list.size
 		#num = node_list.inject(0) { |sum, n| sum += n.is_a?(NodeGroup) ? n.n : 1 } 
-		new_node = NodeGroup.new(px, py, node_list.size, @images)
+		new_node = NodeGroup.new(@images, px, py, node_list.size)
 
 		ready_nodes=0
 		node_list_dup = node_list.dup

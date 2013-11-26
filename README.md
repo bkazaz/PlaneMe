@@ -1,7 +1,7 @@
 PlaneMe
 =======
 
-PlaneMe is a [Planarity](http://planarity.net) clone by [Vassilis Kazazakis](bkazaz@gmail.com).
+PlaneMe is a [Planarity](http://planarity.net) clone by [Vassilis Kazazakis](mailto:bkazaz@gmail.com).
 
 The purpose of the game is to reposition the nodes so that
 no two links intersect. 

@@ -26,8 +26,8 @@ module Conf
 end
 
 $log = Logger.new(STDOUT)
-$log.level = Logger::FATAL
-#$log.level = Logger:: DEBUG
+#$log.level = Logger::FATAL
+$log.level = Logger:: DEBUG
 $log.debug { "Logger started" }
 
 class TimedEvents
@@ -42,8 +42,7 @@ class TimedEvents
 	def update
 		@event_list.each do |key, event|
 			next unless Time.now - event[0] >= event[1]
-			event[2].call
-			@event_list.delete key
+			(@event_list.delete key)[2].call
 		end
 	end
 

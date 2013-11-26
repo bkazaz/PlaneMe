@@ -1,5 +1,6 @@
 require_relative 'base'
 require_relative 'graph'
+require_relative 'text'
 
 class GameWindow < Gosu::Window
 
@@ -10,10 +11,28 @@ class GameWindow < Gosu::Window
 		self.caption = "Planarity"
 
 		@font = Gosu::Font.new(self, Gosu::default_font_name, 20)
-		@events = TimedEvents.new
-		@messages = ["Welcome to the game!"]
-
 		@node_image = ['node.png', 'node_sel.png'].map { |f| Gosu::Image.new(self, f, false) }
+		@events = TimedEvents.new
+
+		@key_actions = {
+			'c' => [Proc.new { action_check }, "Check planarity"],
+			#'e' => [Proc.new { action_empty_selection }, "Empty selection"],
+			'g' => [Proc.new { action_group_nodes }, "Group selection"], 
+			'n' => [Proc.new { start_level(@level+=1) }, "Next level"], 
+			#'p' => [Proc.new { start_level(@level-=1) if @level>1 }, "Previous level"], 
+			#'s' => [Proc.new { @graph.shuffle }, "Shuffle"],
+			'q' => [Proc.new { exit }, "Quit"]
+		}
+		
+		@text_panel =  { }
+		@text_panel[:messages] = TextArray.new(@font, 10, Conf::YSize-30, :direction=>:up, :size=>0.9, :color=>Color::Shade)
+		@text_panel[:messages] << "Welcome to the game!"
+
+		@text_panel[:key_actions] = TextArray.new(@font, Conf::XSize-180, 10)
+		@key_actions.each { |key, val| @text_panel[:key_actions] << "'#{key}' #{val[1]}" }
+
+		@text_panel[:level] = TextArray.new(@font, 10, 10, :size=>1.2) << proc {"Level: #{@level} - Score: #{@score}"}
+		@text_panel[:bonus] = TextArray.new(@font, 10, 35) << proc {"Bonus: #{@graph.score(Time.now-@level_started)}"}
 
 		@score = 0
 		start_level(@level = 1)
@@ -27,7 +46,7 @@ class GameWindow < Gosu::Window
 		else
 			cur_score = @graph.nodes.size*10 + @graph.score(Time.now - @level_started) 
 			@score += cur_score
-			@messages.unshift  "Level #{@level} scored #{cur_score} pts"
+			@text_panel[:messages].unshift  "Level #{@level} scored #{cur_score} pts"
 			start_level(@level+=1)
 		end
 	end
@@ -54,42 +73,20 @@ class GameWindow < Gosu::Window
 			:moving_node 		=> nil,
 			:selected_nodes		=> [],
 		}
-
-		@key_actions = {
-			'c' => [Proc.new { action_check }, "Check planarity"],
-			#'e' => [Proc.new { action_empty_selection }, "Empty selection"],
-			'g' => [Proc.new { action_group_nodes }, "Group selection"], 
-			#'n' => [Proc.new { start_level(@level+=1) }, "Next level"], 
-			#'p' => [Proc.new { start_level(@level-=1) if @level>1 }, "Previous level"], 
-			#'s' => [Proc.new { @graph.shuffle }, "Shuffle"],
-			'q' => [Proc.new { exit }, "Quit"]
-		}
 	end
 
 	def update
 		@events.update
 		@graph.nodes.each { |node| node.update }
-		#@graph.links.each { |link| link.update }
+		@graph.links.each { |link| link.update }
+		@text_panel.each_value { |txt| txt.update() }
 	end
 
 	def draw
-		dt = Time.now-@level_started
-		@font.draw("Level: #{@level} - Score: #{@score}", 10, 10, ZOrder::UI, 1.2, 1.2, Color::Text)
-		@font.draw("Bonus: #{@graph.score(dt)}", 10, 35, ZOrder::UI, 1.0,1.0, Color::Text)
-
-		next_pos = @key_actions.inject(10) { |pos,(key,val)|
-			@font.draw("'#{key}' #{val[1]}", Conf::XSize-180, pos, ZOrder::UI, 1.0, 1.0, Color::Text); pos+20
-		}
-
-		@status[:moving_node].setpos(mouse_x, mouse_y) if @status[:moving_node]
+		@status[:moving_node].position=[mouse_x, mouse_y] if @status[:moving_node]
 		@graph.links.each { |link| link.draw(self) }
 		@graph.nodes.each { |node| node.draw(self) }
-
-		@messages.each_index do |i|
-			break if i == Color::Shade.size
-			py = Conf::YSize-30 - 18*i
-			@font.draw("#{@messages[i]}", 10, py, ZOrder::Background, 0.9, 0.9, Color::Shade[i])
-		end
+		@text_panel.each_value { |txt| txt.draw() }
 	end
 
 	def closest_node(x=mouse_x, y=mouse_y)

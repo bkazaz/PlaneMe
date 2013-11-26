@@ -35,6 +35,8 @@ class PlanarGraph
 		shuffle()
 	end
 
+	# this is just the time-dependent bonus score
+	# The rest is added by the main game engine, see game.rb: PlaneMe::action_check()
 	def score(dt)	# times are in seconds
 		max_score = @level * 200.0
 		half_life = (@nodes.size ** 1.5) * 1.0
@@ -95,10 +97,12 @@ class PlanarGraph
 		node_list_dup = node_list.dup
 
 		node_list_dup.each do |node|
-			node.move_to(px, py, 0.8) do 
+			node.move_to(px, py, 0.8) do
+				# The following code will run when each move_to action finishes
 				ready_nodes+=1
 				if node_list_dup.size == ready_nodes
-					$log.debug { "Integrating the new node" }
+					# When all actions finish
+					# Integrate the new node and remove previous ones
 					extern_nodes.each { |node| node.links.delete_if { |link|  extern_links.include? link } }
 					@links.delete_if { |link| intra_links.include? link or extern_links.include? link }
 					@nodes.delete_if { |node| node_list_dup.include? node }

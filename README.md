@@ -1,7 +1,7 @@
 PlaneMe
 =======
 
-PlaneMe is a Planarity clone (see <http://planarity.net>).
+PlaneMe is a [Planarity](http://planarity.net) clone .
 
 The purpose of the game is to reposition the nodes so that
 no two links intersect. 
@@ -24,5 +24,5 @@ Be careful, grouping nodes reduces your bonus!
 Ruby
 ----
 
-The game is written in **Ruby** using *Gosu* & *Tween* gems.
-See <https://github.com/jlnr/gosu> and <https://rubygems.org/gems/tween>
+The game is written in **Ruby** using [Gosu](https://github.com/jlnr/gosu) 
+& [Tween](https://rubygems.org/gems/tween) gems.

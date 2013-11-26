@@ -13,7 +13,7 @@ class Link
 
 	def select;		@selected_count += 1; end
 	def deselect;	@selected_count -= 1; end
-	def selected?;	@selected_count>0;	end
+	def selected?;	@selected_count>0 ? @selected_count : false;	end
 
 	def draw_data
 		color = @selected_count>0 ? Color::SelectedLink : Color::Link

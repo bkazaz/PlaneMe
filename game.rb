@@ -2,9 +2,9 @@ require_relative 'base'
 require_relative 'graph'
 require_relative 'text'
 
-class GameWindow < Gosu::Window
+class PlaneMe < Gosu::Window
 
-	attr_reader :font, :messages
+	attr_reader :font
 
 	def initialize
 		super Conf::XSize, Conf::YSize, false
@@ -25,14 +25,14 @@ class GameWindow < Gosu::Window
 		}
 		
 		@text_panel =  { }
-		@text_panel[:messages] = TextArray.new(@font, 10, Conf::YSize-30, :direction=>:up, :size=>0.9, :color=>Color::Shade)
+		@text_panel[:messages] = TextArray.new(10, Conf::YSize-30, :direction=>:up, :size=>0.9, :color=>Color::Shade)
 		@text_panel[:messages] << "Welcome to the game!"
 
-		@text_panel[:key_actions] = TextArray.new(@font, Conf::XSize-180, 10)
+		@text_panel[:key_actions] = TextArray.new(Conf::XSize-180, 10)
 		@key_actions.each { |key, val| @text_panel[:key_actions] << "'#{key}' #{val[1]}" }
 
-		@text_panel[:level] = TextArray.new(@font, 10, 10, :size=>1.2) << proc {"Level: #{@level} - Score: #{@score}"}
-		@text_panel[:bonus] = TextArray.new(@font, 10, 35) << proc {"Bonus: #{@graph.score(Time.now-@level_started)}"}
+		@text_panel[:level] = TextArray.new(10, 10, :size=>1.2) << proc {"Level: #{@level} - Score: #{@score}"}
+		@text_panel[:bonus] = TextArray.new(10, 35) << proc {"Bonus: #{@graph.score(Time.now-@level_started)}"}
 
 		@score = 0
 		start_level(@level = 1)
@@ -44,7 +44,7 @@ class GameWindow < Gosu::Window
 			inter.each { |e| e.select }
 			@events.set(:intersect, 2) { inter.each{|e|e.deselect} }
 		else
-			cur_score = @graph.nodes.size*10 + @graph.score(Time.now - @level_started) 
+			cur_score = @graph.nodes.size * 10  +  @graph.score(Time.now - @level_started) 
 			@score += cur_score
 			@text_panel[:messages].unshift  "Level #{@level} scored #{cur_score} pts"
 			start_level(@level+=1)
@@ -79,14 +79,14 @@ class GameWindow < Gosu::Window
 		@events.update
 		@graph.nodes.each { |node| node.update }
 		@graph.links.each { |link| link.update }
-		@text_panel.each_value { |txt| txt.update() }
+		@text_panel.each_value { |txt| txt.update }
 	end
 
 	def draw
 		@status[:moving_node].position=[mouse_x, mouse_y] if @status[:moving_node]
 		@graph.links.each { |link| link.draw(self) }
 		@graph.nodes.each { |node| node.draw(self) }
-		@text_panel.each_value { |txt| txt.draw() }
+		@text_panel.each_value { |txt| txt.draw(self) }
 	end
 
 	def closest_node(x=mouse_x, y=mouse_y)
@@ -133,5 +133,5 @@ class GameWindow < Gosu::Window
 	def needs_cursor?;	true;	end
 end
 
-window = GameWindow.new
+window = PlaneMe.new
 window.show

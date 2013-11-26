@@ -9,8 +9,8 @@ on them and pressing 'g'.
 
 In order for nodes to be grouped, the following criteria must hold
 
-	* They should be connected
-	* Their links should not intersect
-	* They should be simple nodes (not already grouped ones)
+* They should be connected
+* Their links should not intersect
+* They should be simple nodes (not already grouped ones)
 
 Be careful, grouping nodes reduces your bonus!

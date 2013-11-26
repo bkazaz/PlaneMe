@@ -1,10 +1,14 @@
 require 'tween'
 require 'gosu'
 
+# MixIn functionality for objects with (x,y) coordinates
+# that enables smooth movement
+
 module Movable
 	# requires the object to provide:
 	# 	position -> returns [x,y]
 	# 	position= ([x,y])
+	# Assumes obj.update() is called 
 
 	def move_to(px, py, delay=1, &when_done)
 		@this_frame = Gosu::milliseconds

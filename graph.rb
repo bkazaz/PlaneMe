@@ -9,20 +9,31 @@ class PlanarGraph
 		x, y = Conf::XSize/2, Conf::YSize/2
 		@nodes = [Node.new(imgs,x,y), Node.new(imgs,x,y)]
 		@links = [ Link.new(@nodes[0], @nodes[1]) ]
-		@level = level
+		@level = level.to_i
 		@images = imgs
 		used = []
 
 		# Create a planar graph
-		level.times do	# each iteration adds 4 nodes and 8 links
-			@nodes << node1 = Node.new(imgs,x,y)
-			@nodes << node2 = Node.new(imgs,x,y)
+		level.times do |i|
+			2.times { @nodes << Node.new(imgs,x,y) }
 			used << @links.delete_at( Random.rand(@links.size) )
-
-			seeds=[node1, node2, used[-1].nodes[0], used[-1].nodes[1]]
-			#seeds.each_index{|i| seeds.drop(i+1).each{|n| @links << Link.new(seeds[i], n)}}
+			seeds=[@nodes[-1], @nodes[-2], used[-1].nodes[0], used[-1].nodes[1]]
 			seeds.each_uniq_pair { |n1, n2| @links << Link.new(n1,n2) }
-			@links.pop.destroy
+			used.pop.destroy	# this last link already existed
+
+			((i+1)/2).times do
+				# take a link and break it up: *1--*2 => *1--*3--*2 
+				used << @links.delete_at( Random.rand(@links.size) )
+				@nodes << node3 = Node.new(imgs,x,y)
+				used[-1].nodes.each { |nd| @links << Link.new(node3,nd) }
+				used.pop.destroy
+			end
+
+			(i/2).times do
+				# attach a triangle on a node
+				2.times { @nodes << Node.new(imgs,x,y) }
+				[@nodes[-1], @nodes[-2], @links.sample.nodes.sample].each_uniq_pair { |n1,n2| @links << Link.new(n1,n2) }
+			end
 
 			# do not add any more links to nodes that have more than 3 connections
 			nomore = @nodes.reject { |node| node.links.size < 4}
@@ -30,15 +41,6 @@ class PlanarGraph
 				node.links.each { |link| used << @links.delete(link) }
 			end
 			used.delete_if { |link| link==nil }
-
-			2.times do
-				# take a link and break it up: *1--*2 => *1--*3--*2 
-				used << @links.delete_at( Random.rand(@links.size) )
-				@nodes << node3 = Node.new(imgs,x,y)
-				@links << Link.new(node3, used[-1].nodes[0])
-				@links << Link.new(node3, used[-1].nodes[1])
-				used.pop.destroy
-			end
 
 		end
 		@links += used
@@ -50,8 +52,8 @@ class PlanarGraph
 	# The rest is added by the main game engine, see game.rb: PlaneMe::action_check()
 	def score(dt)	# times are in seconds
 		max_score = @level * 200.0
-		half_life = (@nodes.size ** 1.5) * 1.0
-		return [1, (max_score * 2.0 ** (-dt / half_life)).to_i].max
+		half_time = (@nodes.size ** 1.2) * 1.0				# time it takes for score/=2
+		return (max_score * 2.0 ** (-dt / half_time)).to_i
 	end
 
 	# Randomize the node's position and lay them on the screen

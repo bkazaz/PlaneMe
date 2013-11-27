@@ -14,7 +14,7 @@ class PlanarGraph
 		used = []
 
 		# Create a planar graph
-		level.times do
+		level.times do	# each iteration adds 4 nodes and 8 links
 			@nodes << node1 = Node.new(imgs,x,y)
 			@nodes << node2 = Node.new(imgs,x,y)
 			used << @links.delete_at( Random.rand(@links.size) )

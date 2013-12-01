@@ -12,6 +12,7 @@ Available actions:
 * `c` Checks on wether the graph is planar and if so, moves to the next level.
 * `n` Moves to the next level (no score/bonus is gained).
 * `g` Groups selected nodes (see below).
+* `p`/`r` Pauses/resumes the game
 * `q` Quits the game... :-(
 
 In order for nodes to be grouped, the following criteria must hold

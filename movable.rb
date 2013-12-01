@@ -30,7 +30,7 @@ module Movable
 			self.position = [@tween.x, @tween.y]
 			super
 			if @tween.done
-				$log.debug { "#{@tween} is done!" }
+				#$log.debug { "#{@tween} is done!" }
 				class << self	
 					remove_method :update
 					remove_method :delta

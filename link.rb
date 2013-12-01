@@ -4,12 +4,15 @@ class Link
 	attr_reader :nodes
 
 	def initialize ( node1, node2 )
-		(@nodes=[node1, node2]).each {|n| n.links<<self}
-		@snapshot = []
+		#$log.debug { "Link init: #{node1}    #{node2}"}
+		raise "Problem: Link.init: #{node1} #{node2}" if node1.metric(*node2.position)==0
+		(@nodes=[node1, node2]).each { |n| n.links << self }
 		@selected_count=0
 	end
-	def destroy;	@nodes.each {|n| n.links.delete(self)}	end
-	def inspect;	"L{#{@nodes[0]}-#{@nodes[1]}}";	end
+	def destroy;	@nodes.each {|n| n.links.delete(self)};	end
+	def other(node)	@nodes.select{|n| n != node}[0];	end
+	def inspect;	"Link: #{@nodes[0]}-#{@nodes[1]}";	end
+	def to_s; inspect;	end
 
 	def select;		@selected_count += 1; end
 	def deselect;	@selected_count -= 1; end
@@ -34,9 +37,12 @@ class Link
 	def x;	@nodes.collect {|n| n.x};	end
 	def y;	@nodes.collect {|n| n.y};	end
 
-	def intersects?(link)
+	def intersection(link)
 		all_nodes = [@nodes, link.nodes].flatten
-		return false if all_nodes.detect{|n| all_nodes.count(n)>1}
+		if all_nodes.detect{|n| all_nodes.count(n)>1}
+			falsey=false;	def falsey.is_in?;	false;	end
+			return falsey
+		end
 
 		dx10 = x[1] - x[0];				dy10 = y[1] - y[0];
 		dx32 = link.x[1] - link.x[0];	dy32 = link.y[1] - link.y[0];
@@ -45,14 +51,16 @@ class Link
 		s = (-dy10 * (dx02) + dx10 * (dy02)) / (-dx32 * dy10 + dx10 * dy32)
 		t = ( dx32 * (dy02) - dy32 * (dx02)) / (-dx32 * dy10 + dx10 * dy32)
 
-		if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
-			#/ Collision detected
-			#i_x = x[0] + (t * dx10)
-			#i_y = y[0] + (t * dy10)
-			return true
-		else
-			return false #/ No collision
-		end
+		#raise "Problem: #{self.nodes}, #{link.nodes}" if [s,t].any? { |t| t.nan? }
 
+		ret_val = [ x[0] + (t * dx10),  y[0] + (t * dy10) ]
+		if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
+			def ret_val.is_in?;	true; end 
+		else
+			def ret_val.is_in?;	false; end 
+		end
+		return ret_val
 	end
+
+	def intersects?(link);	intersection(link).is_in?	end
 end

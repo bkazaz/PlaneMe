@@ -16,11 +16,10 @@ class PlaneMe < Gosu::Window
 
 		@key_actions = {
 			'c' => [Proc.new { action_check }, "Check planarity"],
-			#'e' => [Proc.new { action_empty_selection }, "Empty selection"],
 			'g' => [Proc.new { action_group_nodes }, "Group selection"], 
 			'n' => [Proc.new { start_level(@level+=1) }, "Next level"], 
-			#'p' => [Proc.new { start_level(@level-=1) if @level>1 }, "Previous level"], 
-			#'s' => [Proc.new { @graph.shuffle }, "Shuffle"],
+			'p' => [Proc.new { @graph.pause}, "Pause"], 
+			'r' => [Proc.new { @graph.resume}, "Resume"], 
 			'q' => [Proc.new { exit }, "Quit"]
 		}
 		
@@ -32,7 +31,7 @@ class PlaneMe < Gosu::Window
 		@key_actions.each { |key, val| @text_panel[:key_actions] << "'#{key}' #{val[1]}" }
 
 		@text_panel[:level] = TextArray.new(10, 10, :size=>1.2) << proc {"Level: #{@level} - Score: #{@score}"}
-		@text_panel[:bonus] = TextArray.new(10, 35) << proc {"Bonus: #{@graph.score(Time.now-@level_started)}"}
+		@text_panel[:bonus] = TextArray.new(10, 35) << proc {"Bonus: #{@graph.score}"}
 
 		@score = 0
 		start_level(@level = 1)
@@ -44,7 +43,7 @@ class PlaneMe < Gosu::Window
 			inter.each { |e| e.select }
 			@events.set(:intersect, 2) { inter.each{|e|e.deselect} }
 		else
-			cur_score = @graph.nodes.size * 10  +  @graph.score(Time.now - @level_started) 
+			cur_score = @graph.score 
 			@score += cur_score
 			@text_panel[:messages].unshift  "Level #{@level} scored #{cur_score} pts"
 			start_level(@level+=1)
@@ -66,8 +65,8 @@ class PlaneMe < Gosu::Window
 
 	def start_level(level)
 		@level=level
+		@graph.kill if @graph
 		@graph = PlanarGraph.new(@level, @node_image)
-		@level_started = Time.now
 
 		@status = {
 			:moving_node 		=> nil,
@@ -77,15 +76,13 @@ class PlaneMe < Gosu::Window
 
 	def update
 		@events.update
-		@graph.nodes.each { |node| node.update }
-		@graph.links.each { |link| link.update }
+		@graph.update
 		@text_panel.each_value { |txt| txt.update }
 	end
 
 	def draw
 		@status[:moving_node].position=[mouse_x, mouse_y] if @status[:moving_node]
-		@graph.links.each { |link| link.draw(self) }
-		@graph.nodes.each { |node| node.draw(self) }
+		@graph.draw(self)
 		@text_panel.each_value { |txt| txt.draw(self) }
 	end
 

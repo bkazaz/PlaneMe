@@ -30,18 +30,37 @@ $log.level = Logger::FATAL
 #$log.level = Logger:: DEBUG
 $log.debug { "Logger started" }
 
+class Timer
+	def initialize
+		@current = 0
+		@offset = 0
+	end
+	def dt;	0;	end
+	def start
+		@offset = self.dt
+		@current = Time.now
+		def self.dt;	Time.now-@current + @offset;	end
+		return self
+	end
+	def pause
+		@offset = self.dt
+		def self.dt;	@offset;	end
+		return self
+	end
+end
+
 class TimedEvents
 	attr_reader	:event_list
 	def initialize;
 		@event_list = {}
 	end
 	def set(key, delay=1, &block)
-		@event_list[key] = [Time.now, delay, block]
+		@event_list[key] = [Timer.new.start, delay, block]
 	end
 	
 	def update
 		@event_list.each do |key, event|
-			next unless Time.now - event[0] >= event[1]
+			next unless event[0].dt >= event[1]
 			(@event_list.delete key)[2].call
 		end
 	end

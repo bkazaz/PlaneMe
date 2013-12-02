@@ -1,3 +1,5 @@
+#!/usr/bin/ruby
+
 require_relative 'base'
 require_relative 'graph'
 require_relative 'text'
@@ -128,5 +130,7 @@ class PlaneMe < Gosu::Window
 	def needs_cursor?;	true;	end
 end
 
-window = PlaneMe.new
-window.show
+if __FILE__ == $PROGRAM_NAME
+	window = PlaneMe.new
+	window.show
+end

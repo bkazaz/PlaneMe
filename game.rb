@@ -20,7 +20,8 @@ class PlaneMe < Gosu::Window
 			'n' => [Proc.new { start_level(@level+=1) }, "Next level"], 
 			'p' => [Proc.new { @graph.pause}, "Pause"], 
 			'r' => [Proc.new { @graph.resume}, "Resume"], 
-			'q' => [Proc.new { exit }, "Quit"]
+			'q' => [Proc.new { exit }, "Quit"],
+			' ' => [Proc.new { super Conf::XSize/2, Conf::YSize/2, false }, "Test"],
 		}
 		
 		@text_panel =  { }

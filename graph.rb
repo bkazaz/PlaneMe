@@ -3,7 +3,7 @@ require_relative 'link'
 require_relative 'node'
 
 class PlanarGraph
-	def r(*x);	x.min+ (x[0]-x[1]).abs * rand;	end
+	def r(*x);	x.min+ (x[0]-x[1]).abs * rand;	end	# just a helper to make life easier
 
 	def initialize(level, imgs)
 		@level = level.to_i 
@@ -26,7 +26,7 @@ class PlanarGraph
 		def self.links; []; end
 		def self.update;	end
 		def self.draw(window)
-			window.font.draw_rel(@msg, Conf::XSize/2, Conf::YSize/2, ZOrder::UI, 0.5,0.5, 2, 2, Color::Text)
+			window.font.draw_rel(@msg, Conf::XSize/2, Conf::YSize/2, ZOrder::UI, 0.5,0.5, 2.5, 2.5, Color::Text)
 		end
 	end
 

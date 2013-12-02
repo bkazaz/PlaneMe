@@ -5,52 +5,63 @@ require_relative 'node'
 class PlanarGraph
 	def r(*x);	x.min+ (x[0]-x[1]).abs * rand;	end	# just a helper to make life easier
 
+	attr_reader :nodes, :links
+	attr_reader :graphics_status
+
 	def initialize(level, imgs)
 		@level = level.to_i 
 		@images = imgs
+		@graphics_status = true
+
+		@update_code, @draw_code = nil, nil
 
 		@nodes, @links = [], []
-		@msg = "Generating...";	graphics_off
-
 		@timer = Timer.new
-		@graph_thread = make_graph
-		@graph_thread.abort_on_exception = true
+		init_graph.abort_on_exception = true
 	end
 
-	def pause;	@timer.pause;	@msg="Paused!"; graphics_off	end
-	def resume;	@timer.start;	graphics_on;				end
-
-	def graphics_off
-		def self.ready?;	false; end
-		def self.nodes; []; end
-		def self.links; []; end
-		def self.update;	end
-		def self.draw(window)
-			window.font.draw_rel(@msg, Conf::XSize/2, Conf::YSize/2, ZOrder::UI, 0.5,0.5, 2.5, 2.5, Color::Text)
-		end
-	end
-
-	def graphics_on
-		def self.draw(window); 	each_sprite { |sprite| sprite.draw(window)	};	end
-		def self.update; 		each_sprite { |sprite| sprite.update		};	end
-		class << self; attr_reader :nodes, :links; end
-		def self.ready?;	true;	end
-	end
-
-	def each_sprite;	[@nodes, @links].each { |list| list.each { |item| yield item } }; end
-
-	def make_graph
-		Thread.new do 
-			create_graph
+	# Graph creation for levels > 30 can take O(seconds) to finish
+	# Assigning the process to a Thread will allow us to keep things under control
+	def init_graph
+		graphics_off "Generating..."
+		@graph_thread=Thread.new do 
+			generate_graph
 			graphics_on
 			@timer.start
 			$log.debug { "Graph is ready!" }
 		end
 	end
-
 	def kill;	@graph_thread.kill;	end
 
-	def create_graph
+	def update(*args);	@update_code.call(*args) if @update_code;	end
+	def draw(*args);	@draw_code.call(*args) if @draw_code;		end
+	def each_sprite;	[@nodes, @links].each { |list| list.each { |item| yield item } }; end
+
+	def pause;	@timer.pause;	graphics_off "Paused!"; 	end
+	def resume;	@timer.start;	graphics_on;				end
+
+	def graphics_off(msg)
+		return @graphics_status unless @graphics_status
+		class << self
+			def nodes; []; end	# temporarily mask the attribute reader
+			def links; []; end	# methods for @nodes & @links
+		end
+		@draw_code = proc { |window| window.font.draw_rel(msg, Conf::XSize/2, Conf::YSize/2, ZOrder::UI, 0.5,0.5, 2.5, 2.5, Color::Text) }
+		@update_code = nil
+		@graphics_status=false
+	end
+
+	def graphics_on
+		return @graphics_status if @graphics_status
+		class << self
+			remove_method :nodes, :links # restore the original attribute readers
+		end
+		@draw_code = proc { |window| each_sprite { |sprite| sprite.draw(window)	} }
+		@update_code = proc { each_sprite { |sprite| sprite.update	} }
+		@graphics_status=true
+	end
+
+	def generate_graph
 		x0, y0 = 100, 100
 		x1, y1 = Conf::XSize-x0, Conf::YSize-20
 		counter=0
@@ -88,27 +99,20 @@ class PlanarGraph
 			end
 		end
 
+		# remove the nodes with just ONE link
 		outer_nodes = @nodes.select { |n| n.links.size < 2 }
 		outer_nodes.each { |n| n.links.each { |l| @links.delete(l).destroy } }
 		@nodes -= outer_nodes
 
-		@msg = "Sorting...";
+		# Bring down the number of nodes by merging some
 		@links.sort_by! { |l| l.nodes.map{|n|n.links.size}.min }
-		@msg = "Clearing..."
 		(@nodes.size - (@level+1)*(@level)-4).times do
 			group( @links[-1].nodes, 
 				  :no_group? => true, :now? => true, 
 				  :groups_allowed? => true, :require_connected? => false, :allow_intersection? => true 
-				 )	# the second line of options are just for speed
+				 )	# the second line of options make for a serious speed optimization
 		end
-		@msg = "Ready"
 		shuffle()
-	end
-
-	def score
-		max_score = @level * 200.0
-		half_time = [1,(@nodes.size ** 1.2) * 1.0].max				# time it takes for score/=2
-		return (@nodes.size*10 + max_score * 2.0 ** (-@timer.dt / half_time)).to_i
 	end
 
 	# Randomize the node's position and lay them on the screen
@@ -129,6 +133,10 @@ class PlanarGraph
 			:move_time => 0.8,	# seconds
 			:now? => false
 	   	}.merge(opts)
+
+		# we want to work on these nodes even after we return from
+		# this method (when the referenced data will probably be emptied
+		node_list = node_list.dup
 
 		# Do not allow NodeGroups to be grouped any further
 		node_list.each { |node| return [node] if node.is_a? NodeGroup } unless opts[:groups_allowed?]
@@ -175,13 +183,11 @@ class PlanarGraph
 			new_node = NodeGroup.new(@images, px, py, num)
 		end
 
-		node_list_dup = node_list.dup
-
 		merge_code = proc do
 			# Integrate the new node and remove previous ones
 			extern_nodes.each { |node| node.links.delete_if { |link|  extern_links.include? link } }
 			@links.delete_if { |link| intra_links.include? link or extern_links.include? link }
-			@nodes.delete_if { |node| node_list_dup.include? node }
+			@nodes.delete_if { |node| node_list.include? node }
 
 			@nodes << new_node
 			extern_nodes.each { |node| @links << Link.new(new_node, node) }
@@ -191,8 +197,8 @@ class PlanarGraph
 			merge_code.call
 		else
 			ready_nodes=0
-			node_list_dup.each do |node|
-				node.move_to(px, py, opts[:move_time]) { merge_code.call if node_list_dup.size == ready_nodes+=1 }
+			node_list.each do |node|
+				node.move_to(px, py, opts[:move_time]) { merge_code.call if node_list.size == ready_nodes+=1 }
 			end
 		end
 
@@ -201,9 +207,15 @@ class PlanarGraph
 
 	# return the first pair of intersecting links that is found
 	def get_intersection
-		return [] unless ready?
+		return [] unless @graphics_status
 		# not the fastest algorithm but still fast enough
 		@links.each_uniq_pair { |l1,l2| return [l1,l2] if l1.intersects? l2 }
 		return nil
+	end
+
+	def score
+		max_score = @level * 200.0
+		half_time = [1, (@nodes.size ** 1.2) * 1.0].max			# time it takes for score/=2
+		return (@nodes.size*10 + max_score * 2.0 ** (-@timer.dt / half_time)).to_i
 	end
 end

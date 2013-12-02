@@ -98,7 +98,7 @@ class PlaneMe < Gosu::Window
 			action[0].call
 		else
 			node = closest_node
-			case id
+			case id		# look at the corresponding `end'
 				when Gosu::MsLeft
 					(@status[:moving_node]=node).select(true)
 					# also, disable intersection highlighting if active

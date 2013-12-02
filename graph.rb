@@ -135,7 +135,7 @@ class PlanarGraph
 	   	}.merge(opts)
 
 		# we want to work on these nodes even after we return from
-		# this method (when the referenced data will probably be emptied
+		# this method (when the referenced list will probably be emptied)
 		node_list = node_list.dup
 
 		# Do not allow NodeGroups to be grouped any further
@@ -153,7 +153,7 @@ class PlanarGraph
 				end
 			# if nothing has been connected at the end of the loop, we're finished
 			end until connected_num == connected.size
-			return disconnected unless disconnected.size == 0
+			return disconnected unless disconnected.empty?
 		end
 
 		# seperate the internal from the external links of the group

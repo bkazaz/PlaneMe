@@ -87,12 +87,10 @@ class PlaneMe < Gosu::Window
 	end
 
 	def closest_node(x=mouse_x, y=mouse_y)
+		return nil if @graph.nodes.empty?
 		distance = (Node.radius+6)**2
-		begin
-			select = @graph.nodes.reject { |node| node.metric(mouse_x, mouse_y)>distance }
-			distance -= 2
-		end while (select.size() > 1 and distance>0)
-		return select[0]
+		@graph.nodes.sort_by!{ |node| node.metric(mouse_x,mouse_y) }.reverse!
+		return (node=@graph.nodes[-1]).metric(mouse_x,mouse_y) < distance ? node : nil
 	end
 
 	def button_down(id)

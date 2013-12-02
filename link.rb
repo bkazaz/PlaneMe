@@ -5,7 +5,7 @@ class Link
 
 	def initialize ( node1, node2 )
 		#$log.debug { "Link init: #{node1}    #{node2}"}
-		raise "Problem: Link.init: #{node1} #{node2}" if node1.metric(*node2.position)==0
+		#raise "Problem: Link.init: #{node1} #{node2}" if node1.metric(*node2.position)==0
 		(@nodes=[node1, node2]).each { |n| n.links << self }
 		@selected_count=0
 	end

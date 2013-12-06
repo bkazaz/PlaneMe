@@ -126,52 +126,23 @@ class PlanarGraph
 	# 	Otherwise, it returns a list with at least two links producing the problem
 	def group(node_list, opts={})
 		opts =  {
-			:groups_allowed? => false,
-			:require_connected? => true,
-			:allow_intersection? => false,
-			:no_group? => false,
-			:move_time => 0.8,	# seconds
-			:now? => false
+			:require_connected? 	=> true,
+			:groups_allowed?		=> false,
+			:allow_intersection?	=> false,
+			:no_group? 				=> false,
+			:now? 					=> false,
+			:move_time 				=> 0.8,	# seconds
 	   	}.merge(opts)
 
 		# we want to work on these nodes even after we return from
 		# this method (when the referenced list will probably be emptied)
-		node_list = node_list.dup
+		node_list = NodeList(node_list.dup)
 
-		# Do not allow NodeGroups to be grouped any further
-		node_list.each { |node| return [node] if node.is_a? NodeGroup } unless opts[:groups_allowed?]
+		node_list.each { |node| return [node] if node.is_a? NodeGroup } unless 	opts[:groups_allowed?]
+		return node_list.disconnected unless node_list.disconnected.empty? if 	opts[:require_connected?] 
 
-		if opts[:require_connected?]
-			# Make sure that all nodes connect to each other
-			connected = [ node_list[0] ]
-			disconnected = node_list.drop(1)
-			connected_num = connected.size
-			begin
-				connected_num = connected.size
-				disconnected.each do |node|
-					connected << disconnected.delete(node) if connected.any? { |n2| node.links_to? n2 }
-				end
-			# if nothing has been connected at the end of the loop, we're finished
-			end until connected_num == connected.size
-			return disconnected unless disconnected.empty?
-		end
-
-		# seperate the internal from the external links of the group
-		intra_links, extern_links = [], []
-		node_list.each { |node| node.links.each do |link|
-			link.nodes.all?{ |n| node_list.include? n } ? intra_links << link : extern_links << link
-		end; }
-		
 		# check that the internal links do not intersect with anything
-		intra_links.each { |l1| @links.each { |l2| return [l1,l2] if l1.intersects? l2 } } unless opts[:allow_intersection?]
-
-		extern_nodes = []	# list of nodes connected to this group
-		extern_links.each { |link| link.nodes.each do |node| 
-			next if node_list.include? node 
-			extern_nodes << node
-		end; }
-
-		# The following code creates the new NodeGroup
+		node_list.links.internal.each { |l1| @links.each { |l2| return [l1,l2] if l1.intersects? l2 } } unless opts[:allow_intersection?]
 
 		# create the x,y coordinates of the new node
 		px = node_list.inject(0) { |sum, n| sum+=n.x } / node_list.size
@@ -185,12 +156,12 @@ class PlanarGraph
 
 		merge_code = proc do
 			# Integrate the new node and remove previous ones
-			extern_nodes.each { |node| node.links.delete_if { |link|  extern_links.include? link } }
-			@links.delete_if { |link| intra_links.include? link or extern_links.include? link }
+			node_list.nodes.external.each { |node| node.links.delete_if { |link|  node_list.links.external.include? link } }
+			@links.delete_if { |link| node_list.links.internal.include? link or node_list.links.external.include? link }
 			@nodes.delete_if { |node| node_list.include? node }
 
 			@nodes << new_node
-			extern_nodes.each { |node| @links << Link.new(new_node, node) }
+			node_list.nodes.external.each { |node| @links << Link.new(new_node, node) }
 		end
 
 		if opts[:now?]

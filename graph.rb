@@ -107,7 +107,7 @@ class PlanarGraph
 		# Bring down the number of nodes by merging some
 		@links.sort_by! { |l| l.nodes.map{|n|n.links.size}.min }
 		(@nodes.size - (@level+1)*(@level)-4).times do
-			group( @links[-1].nodes, 
+			group( @links[0].nodes, 
 				  :no_group? => true, :now? => true, 
 				  :groups_allowed? => true, :require_connected? => false, :allow_intersection? => true 
 				 )	# the second line of options make for a serious speed optimization
@@ -119,7 +119,7 @@ class PlanarGraph
 	def shuffle
 		@nodes.shuffle!
 		r, dt = [Conf::XSize, Conf::YSize].min/2 - 20, 2*Math::PI/@nodes.size
-		@nodes.inject(0) { |t, node| node.move_to(Conf::XSize/2 + r*Math.cos(t), Conf::YSize/2 + r*Math.sin(t), r(0.8,1.8)); t+dt }
+		@nodes.inject(0) { |t, node| node.move_to(Conf::XSize/2 + r*Math.cos(t), Conf::YSize/2 + r*Math.sin(t), r(1.2,2.0)); t+dt }
 	end
 
 	# It groups nodes into a unit iff they are planar AND detachable and returns nil
@@ -136,7 +136,7 @@ class PlanarGraph
 
 		# we want to work on these nodes even after we return from
 		# this method (when the referenced list will probably be emptied)
-		node_list = NodeList(node_list.dup)
+		node_list = Node.List(node_list.dup)
 
 		node_list.each { |node| return [node] if node.is_a? NodeGroup } unless 	opts[:groups_allowed?]
 		return node_list.disconnected unless node_list.disconnected.empty? if 	opts[:require_connected?] 

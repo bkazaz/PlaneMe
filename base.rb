@@ -26,8 +26,8 @@ module Conf
 end
 
 $log = Logger.new(STDOUT)
+$log.level = Logger::DEBUG
 $log.level = Logger::FATAL
-#$log.level = Logger:: DEBUG
 $log.debug { "Logger started" }
 
 class Timer
@@ -80,3 +80,5 @@ class Array
 		end
 	end
 end
+
+IntExt = Struct.new(:internal, :external)

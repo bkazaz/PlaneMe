@@ -51,7 +51,7 @@ class Link
 		s = (-dy10 * (dx02) + dx10 * (dy02)) / (-dx32 * dy10 + dx10 * dy32)
 		t = ( dx32 * (dy02) - dy32 * (dx02)) / (-dx32 * dy10 + dx10 * dy32)
 
-		#raise "Problem: #{self.nodes}, #{link.nodes}" if [s,t].any? { |t| t.nan? }
+		$log.debug { "intersection (#{s}, #{t}) for #{self.nodes}, #{link.nodes}" } if [s,t].any? { |x| x.nan? } 
 
 		ret_val = [ x[0] + (t * dx10),  y[0] + (t * dy10) ]
 		if (s >= 0 && s <= 1 && t >= 0 && t <= 1)

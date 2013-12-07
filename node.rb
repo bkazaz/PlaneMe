@@ -25,7 +25,6 @@ class Node
 		$log.debug { self } 
 	end
 	def inspect;	"Node:(#{x.to_i}, #{y.to_i})";	end
-	#def links;	return @links;	end
 
 	def links_to?(node);	@links.any? { |link| link.nodes.include? node };	end
 
@@ -57,56 +56,56 @@ class Node
 
 	def ds(n2);	metric(*n2.position);	end
 	def metric(x0,y0);	(x0-x)**2 + (y0-y)**2;		end
-end
 
-IntExt = Struct.new(:internal, :external)
+	# Adds extra functionality to an array of nodes
+	def self.List(ary)
+		class << ary
 
-# Adds extra functionality to an array of nodes
-def NodeList(ary)
-	class << ary		# self is now the ary object
-
-		# list of nodes with no internal connection to node 0
-		@disconnected=nil
-		def disconnected
-			return @disconnected if @disconnected
-			connected = [ self[0] ]
-			@disconnected = self.drop(1)
-			num = connected.size
-			begin
+			# list of nodes with no internal connection to node 0
+			@disconnected=nil
+			def disconnected
+				return @disconnected if @disconnected
+				connected = [ self[0] ]
+				@disconnected = self.drop(1)
 				num = connected.size
-				@disconnected.each do |node|
-					connected << @disconnected.delete(node) if connected.any? { |n2| node.links_to? n2 }
-				end
-			end until num == connected.size	# if nothing has been connected at the end of the loop, we're finished
-			return @disconnected
+				begin
+					num = connected.size
+					@disconnected.each do |node|
+						connected << @disconnected.delete(node) if connected.any? { |n2| node.links_to? n2 }
+					end
+				end until num == connected.size	# if nothing has been connected at the end of the loop, we're finished
+				return @disconnected
+			end
+
+			# internal & external links of the nodes
+			@links = nil
+			def links
+				return @links if @links
+				# seperate the internal from the external links of the group
+				@links = IntExt.new([], [])
+				self.each { |node| node.links.each do |link|
+					link.nodes.all?{ |n| self.include? n } ? @links.internal << link : @links.external << link
+				end; }
+				return @links
+			end
+
+			@nodes = nil
+			def nodes
+				return @nodes if @nodes
+				@nodes = IntExt.new(self, [])
+				self.links.external.each { |link| link.nodes.each do |node| 
+					next if self.include? node 
+					@nodes.external << node
+				end; };		@nodes.external.uniq!
+				return @nodes
+			end
 		end
 
-		# internal & external links of the nodes
-		@links = nil
-		def links
-			return @links if @links
-			# seperate the internal from the external links of the group
-			@links = IntExt.new([], [])
-			self.each { |node| node.links.each do |link|
-				link.nodes.all?{ |n| self.include? n } ? @links.internal << link : @links.external << link
-			end; }
-			return @links
-		end
-
-		@nodes = nil
-		def nodes
-			return @nodes if @nodes
-			@nodes = IntExt.new(self, [])
-			self.links.external.each { |link| link.nodes.each do |node| 
-				next if self.include? node 
-				@nodes.external << node
-			end; };		@nodes.external.uniq!
-			return @nodes
-		end
+		return ary
 	end
 
-	return ary
 end
+
 
 class NodeGroup < Node
 	attr_reader :n

@@ -1,8 +1,11 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
+
+require 'drb'	# for the score board
 
 require_relative 'base'
 require_relative 'graph'
 require_relative 'text'
+require_relative 'score'
 
 class PlaneMe < Gosu::Window
 
@@ -22,7 +25,7 @@ class PlaneMe < Gosu::Window
 			'n' => [Proc.new { start_level(@level+=1) }, "Next level"], 
 			'p' => [Proc.new { @graph.pause}, "Pause"], 
 			'r' => [Proc.new { @graph.resume}, "Resume"], 
-			'q' => [Proc.new { exit }, "Quit"],
+			'q' => [Proc.new { @board.save;	exit }, "Quit"],
 		}
 		
 		@text_panel =  { }
@@ -37,6 +40,8 @@ class PlaneMe < Gosu::Window
 
 		@score = 0
 		start_level(@level = 1)
+
+		@board = ScoreBoard.get
 	end
 
 	def action_check
@@ -47,6 +52,7 @@ class PlaneMe < Gosu::Window
 		else
 			cur_score = @graph.score 
 			@score += cur_score
+			@board.submit(@level, @score, "botaki")
 			@text_panel[:messages].unshift  "Level #{@level} scored #{cur_score} pts"
 			start_level(@level+=1)
 		end

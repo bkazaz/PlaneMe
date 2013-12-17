@@ -1,11 +1,11 @@
 #!/usr/bin/env ruby
 
-require 'drb'	# for the score board
-
 require_relative 'base'
 require_relative 'graph'
 require_relative 'text'
 require_relative 'score'
+
+USER_NAME = 'botaki'
 
 class PlaneMe < Gosu::Window
 
@@ -52,7 +52,7 @@ class PlaneMe < Gosu::Window
 		else
 			cur_score = @graph.score 
 			@score += cur_score
-			@board.submit(@level, @score, "botaki")
+			@board.submit(@level, @score, USER_NAME)
 			@text_panel[:messages].unshift  "Level #{@level} scored #{cur_score} pts"
 			start_level(@level+=1)
 		end
